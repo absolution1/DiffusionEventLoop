@@ -2,6 +2,7 @@
 #define RECOHIT_H_SEEN
 //STL
 //ROOT
+#include "TVector3.h"
 //CUSTOM
 
 class RecoHit{
@@ -26,7 +27,10 @@ class RecoHit{
         UInt_t RecoHitPlaneID,
         UInt_t RecoHitTPCID,
         Bool_t RecoHitIsValid,
-        UInt_t RecoHitCryostatID) 
+        UInt_t RecoHitCryostatID,
+        Double_t RecoHitWireCenterX,
+        Double_t RecoHitWireCenterY,
+        Double_t RecoHitWireCenterZ) 
           :
             StartTick(RecoHitStartTick),
             EndTick(RecoHitEndTick),
@@ -48,7 +52,8 @@ class RecoHit{
             PlaneID(RecoHitPlaneID),
             TPCID(RecoHitTPCID),
             IsValid(RecoHitIsValid),
-            CryostatID(RecoHitCryostatID) {};
+            CryostatID(RecoHitCryostatID),
+            WireCenter(RecoHitWireCenterX,RecoHitWireCenterY,RecoHitWireCenterZ){};
 
     Int_t StartTick;
     Int_t EndTick;
@@ -71,6 +76,7 @@ class RecoHit{
     UInt_t TPCID;
     Bool_t IsValid;
     UInt_t CryostatID;
+    TVector3 WireCenter;
 
   private:
 

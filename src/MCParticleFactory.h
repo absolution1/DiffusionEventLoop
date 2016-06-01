@@ -1,5 +1,6 @@
 //STL
 #include <iostream>
+#include <algorithm>
 //ROOT
 #include "TTree.h"
 //CUSTOM

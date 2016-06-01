@@ -36,7 +36,7 @@ std::vector<MCParticle> MCParticleFactory::GetParticleVector(){
   std::vector<MCParticle> particle_vector;
   for (UInt_t i = 0; i < fNMCParticles; i++){
     //Create an MC particle
-    MCParticle particle(
+    particle_vector.push_back(MCParticle(
       fMCParticleTrackID[i],
       fMCParticlePDG[i],
       fMCParticleNumberDaughters[i],
@@ -64,8 +64,7 @@ std::vector<MCParticle> MCParticleFactory::GetParticleVector(){
       fMCParticleCounterIDs[i],
       fMCParticleUsesEastCounter[i],
       fMCParticleUsesWestCounter[i]
-    );
-    particle_vector.push_back(particle);
+    ));
   }
   return particle_vector;
 }

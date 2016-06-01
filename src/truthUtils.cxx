@@ -28,25 +28,25 @@ TriggerDefs::Triggers TruthUtils::GetExternalTrigger(const MCParticle &particle)
   bool hitSouthDown = 0;
   bool hitNorthDown = 0;
   bool hitSouthUp = 0;
-  bool hitTSULow = 0;
-  bool hitTSUHigh = 0;
+  bool hitBSULow = 0;
+  bool hitBSUHigh = 0;
 
   for (UInt_t i = 0; i < particle.NCounters; i++){
     CounterDefs::Counters counter_id = static_cast<CounterDefs::Counters>(particle.CounterIDs[i]);
-    if (counter_id >= CounterDefs::kBSUW0 && counter_id <= CounterDefs::kBSUW9) hitWest = true;
-    else if (counter_id >= CounterDefs::kBSUE0 && counter_id <= CounterDefs::kBSUE9) hitEast = true;
-    else if (counter_id >= CounterDefs::kBSUNU0 && counter_id <= CounterDefs::kBSUNU5) hitNorthUp = true;
-    else if (counter_id >= CounterDefs::kBSUSD0 && counter_id <= CounterDefs::kBSUSD5) hitSouthDown = true;
-    else if (counter_id >= CounterDefs::kBSUND0 && counter_id <= CounterDefs::kBSUND5) hitNorthDown = true;
-    else if (counter_id >= CounterDefs::kBSUSU0 && counter_id <= CounterDefs::kBSUSU5) hitSouthUp = true;
-    else if (counter_id >= CounterDefs::kTSU0 && counter_id <= CounterDefs::kTSU21) hitTSULow = true;
-    else if (counter_id >= CounterDefs::kTSU22 && counter_id <= CounterDefs::kTSU47) hitTSUHigh = true;
+    if (counter_id >= CounterDefs::kTSUW0 && counter_id <= CounterDefs::kTSUW9) hitWest = true;
+    else if (counter_id >= CounterDefs::kTSUE0 && counter_id <= CounterDefs::kTSUE9) hitEast = true;
+    else if (counter_id >= CounterDefs::kTSUNU0 && counter_id <= CounterDefs::kTSUNU5) hitNorthUp = true;
+    else if (counter_id >= CounterDefs::kTSUSD0 && counter_id <= CounterDefs::kTSUSD5) hitSouthDown = true;
+    else if (counter_id >= CounterDefs::kTSUND0 && counter_id <= CounterDefs::kTSUND5) hitNorthDown = true;
+    else if (counter_id >= CounterDefs::kTSUSU0 && counter_id <= CounterDefs::kTSUSU5) hitSouthUp = true;
+    else if (counter_id >= CounterDefs::kBSU0 && counter_id <= CounterDefs::kBSU21) hitBSULow = true;
+    else if (counter_id >= CounterDefs::kBSU22 && counter_id <= CounterDefs::kBSU47) hitBSUHigh = true;
   }
 
-  if (hitWest && hitEast) return TriggerDefs::kBSUEW;
-  if (hitNorthUp && hitSouthDown) return TriggerDefs::kBSUNUSD;
-  if (hitNorthDown && hitSouthUp) return TriggerDefs::kBSUNDSU;
-  if (hitTSULow && hitTSUHigh) return TriggerDefs::kTSU;
+  if (hitWest && hitEast) return TriggerDefs::kTSUEW;
+  if (hitNorthUp && hitSouthDown) return TriggerDefs::kTSUNUSD;
+  if (hitNorthDown && hitSouthUp) return TriggerDefs::kTSUNDSU;
+  if (hitBSULow && hitBSUHigh) return TriggerDefs::kBSU;
 
   return TriggerDefs::kNoTrigger;
 }
@@ -54,7 +54,7 @@ TriggerDefs::Triggers TruthUtils::GetExternalTrigger(const MCParticle &particle)
 Bool_t TruthUtils::IsSignal(const MCParticle &particle){
 
   TriggerDefs::Triggers trig_id = GetExternalTrigger(particle);
-  if (trig_id != TriggerDefs::kBSUEW) return false;
+  if (trig_id != TriggerDefs::kTSUEW) return false;
   if (std::abs(particle.PDG) != 13) return false;
 
   return true;

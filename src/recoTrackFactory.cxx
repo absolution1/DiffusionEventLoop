@@ -43,6 +43,11 @@ RecoTrackFactory::RecoTrackFactory::RecoTrackFactory(TTree *tree){
   tree->SetBranchAddress("RecoHitTPCID",&fRecoHitTPCID);
   tree->SetBranchAddress("RecoHitIsValid",&fRecoHitIsValid);
   tree->SetBranchAddress("RecoHitCryostatID",&fRecoHitCryostatID);
+  tree->SetBranchAddress("RecoHitWireCenterX",&fRecoHitWireCenterX);
+  tree->SetBranchAddress("RecoHitWireCenterY",&fRecoHitWireCenterY);
+  tree->SetBranchAddress("RecoHitWireCenterZ",&fRecoHitWireCenterZ);
+
+
 }
 
 std::vector<RecoTrack> RecoTrackFactory::GetRecoTrackVector(){
@@ -110,7 +115,11 @@ std::map<Int_t, std::vector<RecoHit> >& RecoTrackFactory::ConstructHitMap(){
         fRecoHitPlaneID[i],
         fRecoHitTPCID[i],
         fRecoHitIsValid[i],
-        fRecoHitCryostatID[i]);
+        fRecoHitCryostatID[i],
+        fRecoHitWireCenterX[i],
+        fRecoHitWireCenterY[i],
+        fRecoHitWireCenterZ[i]);
+
 
     hit_map[fRecoHitTrackID[i]].push_back(reco_hit);
   }

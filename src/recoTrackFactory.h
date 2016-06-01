@@ -61,5 +61,8 @@ class RecoTrackFactory{
   UInt_t fRecoHitTPCID[GlobalDefs::kNMaxRecoHits];
   Bool_t fRecoHitIsValid[GlobalDefs::kNMaxRecoHits];
   UInt_t fRecoHitCryostatID[GlobalDefs::kNMaxRecoHits];
+  Double_t fRecoHitWireCenterX[GlobalDefs::kNMaxRecoHits];
+  Double_t fRecoHitWireCenterY[GlobalDefs::kNMaxRecoHits];
+  Double_t fRecoHitWireCenterZ[GlobalDefs::kNMaxRecoHits];
 
 };
