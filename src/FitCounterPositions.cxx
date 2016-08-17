@@ -1,7 +1,10 @@
 #include "FitCounterPositions.h"
 
-FitCounterPositions::FitCounterPositions::FitCounterPositions(){
-  fApp = new TApplication("theApp",0,0,0,0);
+FitCounterPositions::FitCounterPositions::FitCounterPositions(std::string input_file, int counter_number){
+  fInputStream.open(input_file);
+  fCounterNumber = counter_number;
+
+  bool is_data = true;
 
   fCounterPositionsAndDimensions[6].first.SetXYZ(-31.6952,-88.2705,-106.22);
   fCounterPositionsAndDimensions[7].first.SetXYZ(-0.946863,-88.2705,-106.22);
@@ -25,131 +28,211 @@ FitCounterPositions::FitCounterPositions::FitCounterPositions(){
   fCounterPositionsAndDimensions[36].first.SetXYZ(194.943,121.1995,309.32);
   fCounterPositionsAndDimensions[37].first.SetXYZ(223.825, 121.1995,309.32);
 
-  for (std::map<Int_t,std::pair<TVector3,double> >::iterator it = fCounterPositionsAndDimensions.begin(); it != fCounterPositionsAndDimensions.end(); it++){
-    (*it).second.second = 32.56;
+  fEWCounterPosCorrection[15] = 230;
+  fEWCounterPosCorrection[14] = 199;
+  fEWCounterPosCorrection[13] = 168;
+  fEWCounterPosCorrection[12] = 137;
+  fEWCounterPosCorrection[11] = 106;
+  fEWCounterPosCorrection[10] = 75;
+  fEWCounterPosCorrection[9] = 44;
+  fEWCounterPosCorrection[8] = 13;
+  fEWCounterPosCorrection[7] = -18;
+  fEWCounterPosCorrection[6] = -49;
+
+  fEWCounterPosCorrection[37] = 230;
+  fEWCounterPosCorrection[36] = 199;
+  fEWCounterPosCorrection[35] = 168;
+  fEWCounterPosCorrection[34] = 137;
+  fEWCounterPosCorrection[33] = 106;
+  fEWCounterPosCorrection[32] = 75;
+  fEWCounterPosCorrection[31] = 44;
+  fEWCounterPosCorrection[30] = 13;
+  fEWCounterPosCorrection[29] = -18;
+  fEWCounterPosCorrection[28] = -49;
+
+
+
+  for (std::map<Int_t,std::pair<TVector3,std::pair<double,double> > >::iterator it = fCounterPositionsAndDimensions.begin(); it != fCounterPositionsAndDimensions.end(); it++){
+    (*it).second.second.first = 2.*0.475;
+    //(*it).second.second.second = 32.56;
+    (*it).second.second.second = 27.06;
+    if (is_data){
+      Int_t id = (*it).first;
+      Double_t x_correction = fEWCounterPosCorrection[id];
+      (*it).second.first.SetX(x_correction);
+    }
   }
+
+
 
 }
 
-void FitCounterPositions::AccumulateStats(const std::vector<RecoHit> &hits, const std::vector<AuxDet> &aux_dets){
-  //Firstly, reconstruct the trigger
-  //Check if a trigger exists.  If not sack of this event
 
-  bool has_trigger = false;
-  for (unsigned int i = 0; i < aux_dets.size(); i++){
-    if (aux_dets[i].ID == 111){
-      has_trigger = true;
-      break;
+
+void FitCounterPositions::AnalyzeCounter(){
+  //Get the nominal center of the counters
+  double x_center = fCounterPositionsAndDimensions[fCounterNumber].first.X();
+  double z_center = fCounterPositionsAndDimensions[fCounterNumber].first.Z();
+
+  double x_min = x_center-40.;
+  double x_max = x_center+40.;
+  int Nx_steps = 1000;
+  double x_step = (x_max-x_min)/Nx_steps;
+  double z_min = z_center-40.;
+  double z_max = z_center+40.;
+  int Nz_steps = 1000;
+  double z_step = (z_max-z_min)/Nz_steps;
+
+
+  int NTotal = Nx_steps*Nz_steps;
+  //The output
+  TH2F *hist = new TH2F("results","",Nz_steps,z_min-z_step/2.,z_max-z_step/2.,Nx_steps,x_min-x_step/2.,x_max-x_step/2.); 
+  hist->GetXaxis()->SetTitle("Counter centre Z coord (cm)");
+  hist->GetYaxis()->SetTitle("Counter centre X coord (cm)");
+  hist->GetZaxis()->SetTitle("No. track intersections");
+
+
+  int curr_counter_assessment = 0;
+  std::cout<<"Number of counter positions to assess: " << NTotal << std::endl;
+  for (double x = x_min; x < x_max; x+=x_step){
+    for (double z = z_min; z < z_max; z+=z_step){
+      if (curr_counter_assessment > 0 && curr_counter_assessment%10000==0) std::cout<<"Assessing counter " << curr_counter_assessment<<"/"<<NTotal<<std::endl;
+      std::vector<TVector2> counter_coords = GetCounterBoundingBox(z,x);
+      int NIntersections = 0;
+      double m, c;
+      while (fInputStream.good()){
+        LoadLine(m,c);
+        if (!fInputStream.good()) break;
+        //For the ray collision algorithm, it expects there to be two points on the line so calculate these
+        double z_1 = -10000.;
+        double x_1 = m*z_1 + c;
+        double z_2 = 10000.;
+        double x_2 = m*z_2 + c;
+        bool success = SegmentIntersectRectangle(counter_coords[0].X(),counter_coords[0].Y(),counter_coords[1].X(),counter_coords[1].Y(),z_1,x_1,z_2,x_2);
+        if (success) NIntersections++;
+      }
+      //std::cout<<"z: " << z << " x: " << x << " NInt: " << NIntersections << std::endl;
+      hist->Fill(z,x,NIntersections);
+
+      fInputStream.clear();
+      fInputStream.seekg(0,fInputStream.beg);
+
+      curr_counter_assessment++;
     }
   }
-  if (!has_trigger) return;
 
-  std::vector<AuxDet> trigger_constituents = ReconstructEWTrigger(aux_dets);
-  //Only proceed if there are exactly 2 counters found
-  if (trigger_constituents.size() != 2) return;
-
-  //Check that we have one East AND one West counter
-  bool has_east = false;
-  bool has_west = false;
-  for (unsigned int i = 0; i < trigger_constituents.size(); i++){
-    CounterDefs::Counters id = static_cast<CounterDefs::Counters>(trigger_constituents[i].ID);
-    if (id > CounterDefs::kTSUE0 && CounterDefs::kTSUE9) has_east = true;
-    if (id > CounterDefs::kTSUW0 && CounterDefs::kTSUW9) has_west = true;
-  }
-  if (!(has_east && has_west)) return;
-
-
-  //Get the T0 from the trigger constituents
-  Double_t T0 = GetT0FromCounters(trigger_constituents);
-
-
-  TH2F h_Selection[NCuts];
-  for (int i = 0; i < NCuts; i++){
-    TString name = Form("h_%i",i);
-    h_Selection[i] = TH2F(name,"",1000,0,150,5000,0,5000);
-
-  }
-  TCanvas canvas("canvasKey");
-  canvas.Divide(2,1);
-
-
-  //Now loop over the hits
-  for (unsigned int hit_i = 0; hit_i < hits.size(); hit_i++){
-    //Only look at the collection plane
-    if (hits[hit_i].PlaneID != 2) continue;
-    //Now Draw all of the hits
-    h_Selection[0].Fill(hits[hit_i].WireCenter.Z(),hits[hit_i].PeakTime-T0,hits[hit_i].Integral);
-
-    //Now reject hits on wires with multiple occupancy
-    UInt_t nhits_on_wire = NHitsOnWire(hits[hit_i].WireID,hits);
-    if (nhits_on_wire > 80) continue;
-    h_Selection[1].Fill(hits[hit_i].WireCenter.Z(),hits[hit_i].PeakTime-T0,hits[hit_i].Integral);
-
-  }
-  for (int i = 0; i < NCuts; i++){
-    canvas.cd(i+1);
-    h_Selection[i].Draw("colz");
-  }
-  canvas.Update();
-  canvas.WaitPrimitive();
+  TString file_name = Form("results_for_counter_%i.root",fCounterNumber);
+  TFile *file = new TFile(file_name,"RECREATE");
+  hist->Write();
+  file->Close();
 
   return;
 }
 
-std::vector<AuxDet> FitCounterPositions::ReconstructEWTrigger(const std::vector<AuxDet> &aux_dets){
-  std::vector<AuxDet> trigger_constituents;
+void FitCounterPositions::LoadLine(double &m, double &c){
+  fInputStream >> m >> c;
+  return;
 
-  //Get the trigger time
-  Int_t trigger_time;
-  for (unsigned int i = 0; i < aux_dets.size(); i++){
-    if (aux_dets[i].ID == 111) trigger_time = aux_dets[i].Time;
-  }
+}
 
-  //Now loop over them again and find all of the counters within a time tolerance
-  Int_t time_tolerance = 20;
-  for (unsigned int i = 0; i < aux_dets.size(); i++){
-    Int_t id = static_cast<CounterDefs::Counters>(aux_dets[i].ID);
-    //Only look at EW counters
-    if (!((id > CounterDefs::kTSUE0 && id < CounterDefs::kTSUE9) || (id > CounterDefs::kTSUW0 && id < CounterDefs::kTSUW9))) continue;
-    //Now check if the counter is within the time tolerance
-    Int_t counter_time = aux_dets[i].Time;
-    if (std::abs(trigger_time-counter_time) < time_tolerance){
-      trigger_constituents.push_back(aux_dets[i]);
+void FitCounterPositions::Run(){
+  AnalyzeCounter();
+  return;
+}
+
+std::vector<TVector2> FitCounterPositions::GetCounterBoundingBox(double z_center, double x_center){
+  //Get counter dimensions
+  double z_dim = fCounterPositionsAndDimensions[fCounterNumber].second.first;
+  double x_dim = fCounterPositionsAndDimensions[fCounterNumber].second.second;
+
+  std::vector<TVector2> coords;
+  coords.push_back(TVector2(z_center-z_dim/2.,x_center-x_dim/2.));
+  coords.push_back(TVector2(z_center+z_dim/2.,x_center+x_dim/2.));
+
+  return coords;
+
+}
+
+bool FitCounterPositions::SegmentIntersectRectangle(double a_rectangleMinX,
+                                 double a_rectangleMinY,
+                                 double a_rectangleMaxX,
+                                 double a_rectangleMaxY,
+                                 double a_p1x,
+                                 double a_p1y,
+                                 double a_p2x,
+                                 double a_p2y)
+  {
+    // Find min and max X for the segment
+
+    double minX = a_p1x;
+    double maxX = a_p2x;
+
+    if(a_p1x > a_p2x)
+    {
+      minX = a_p2x;
+      maxX = a_p1x;
     }
-    
+
+    // Find the intersection of the segment's and rectangle's x-projections
+
+    if(maxX > a_rectangleMaxX)
+    {
+      maxX = a_rectangleMaxX;
+    }
+
+    if(minX < a_rectangleMinX)
+    {
+      minX = a_rectangleMinX;
+    }
+
+    if(minX > maxX) // If their projections do not intersect return false
+    {
+      return false;
+    }
+
+    // Find corresponding min and max Y for min and max X we found before
+
+    double minY = a_p1y;
+    double maxY = a_p2y;
+
+    double dx = a_p2x - a_p1x;
+
+    if(std::abs(dx) > 0.0000001)
+    {
+      double a = (a_p2y - a_p1y) / dx;
+      double b = a_p1y - a * a_p1x;
+      minY = a * minX + b;
+      maxY = a * maxX + b;
+    }
+
+    if(minY > maxY)
+    {
+      double tmp = maxY;
+      maxY = minY;
+      minY = tmp;
+    }
+
+    // Find the intersection of the segment's and rectangle's y-projections
+
+    if(maxY > a_rectangleMaxY)
+    {
+      maxY = a_rectangleMaxY;
+    }
+
+    if(minY < a_rectangleMinY)
+    {
+      minY = a_rectangleMinY;
+    }
+
+    if(minY > maxY) // If Y-projections do not intersect return false
+    {
+      return false;
+    }
+
+    return true;
   }
 
-  return trigger_constituents;
-}
-
-Double_t FitCounterPositions::GetT0FromCounters(const std::vector<AuxDet> &aux_dets){
-  Double_t T0 = 0;
-  if (aux_dets.size() == 0) return T0;
-
-  for (unsigned int i = 0; i < aux_dets.size(); i++){
-    T0 += (Double_t)aux_dets[i].Time;
-  }
-
-  T0 /= aux_dets.size();
-
-  return T0;
-}
-
-UInt_t FitCounterPositions::NHitsOnWire(UInt_t wire_id, const std::vector<RecoHit> &reco_hits){
-  Int_t NHits = 0;
-  for (unsigned int i = 0; i < reco_hits.size(); i++){
-    if (reco_hits[i].WireID == wire_id) NHits++;
-  }
-
-  return NHits;
-}
-
-Bool_t FitCounterPositions::HitWithinCounterShadow(const RecoHit &hit, const std::vector<AuxDet> &aux_dets){
-
-  //Convert counter pos to drift time
-  //form lines between counters
-  //check if hit within bounds
-
-
-  return false;
+void FitCounterPositions::Test(){
+  std::cout<<"SUCCESS"<<std::endl;
+  return;
 }

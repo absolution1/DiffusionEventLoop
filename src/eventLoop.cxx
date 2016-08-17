@@ -25,10 +25,10 @@ void EventLoop::RunAndGun(){
   Selector selector;
 
   //Create the output manager
-  OutputManager output_manager("output.root");
+  //OutputManager output_manager("output.root");
 
   //For fitting the counter positions
-  FitCounterPositions counter_position_fitter;
+  ReconstructCounterTracks counter_track_reconstructer;
   
   //Get the information to start the loop
   Long64_t NEvents = fChain->GetEntries();
@@ -37,6 +37,7 @@ void EventLoop::RunAndGun(){
     try{
       PrintEventNumber(eventno);
       fChain->GetEntry(eventno);
+      /*
       std::vector<MCParticle> mc_particles = truth_factory.GetParticleVector();
       for (unsigned int i = 0; i < mc_particles.size(); i++){
       }
@@ -47,15 +48,19 @@ void EventLoop::RunAndGun(){
         if (matched_particle) output_manager.StoreMCParticleForRecoTrack(*matched_particle);
         output_manager.StoreCutLevelForRecoTrack(selector.GetCutLevel());
         output_manager.StoreRecoTrack(reco_tracks[i]);
+
+
         output_manager.FillRecoObjTree();
       }
+      */
 
       std::vector<RecoHit> reco_hits = hit_factory.GetRecoHitVector();
       std::vector<AuxDet> aux_dets = auxdet_factory.GetAuxDetVector();
+  
+      counter_track_reconstructer.AccumulateStats(reco_hits,aux_dets);
 
-      counter_position_fitter.AccumulateStats(reco_hits,aux_dets);
 
-      output_manager.FillEvTree();
+      //output_manager.FillEvTree();
     }
 
     catch(...){

@@ -1,37 +1,47 @@
 //STL
 #include <iostream>
+#include <string>
+#include <fstream>
 #include <map>
+#include <vector>
 #include <algorithm>
 //ROOT
+#include "TVector3.h"
+#include "TVector2.h"
+#include "TFile.h"
 #include "TH2F.h"
-#include "TCanvas.h"
-#include "TApplication.h"
 #include "TString.h"
 //CUSTOM
-#include "recoHit.h"
-#include "auxDet.h"
-#include "definitions.h"
-
-static const int NCuts = 2;
 
 class FitCounterPositions{
   public:
-    FitCounterPositions();
+    FitCounterPositions(){};
+    FitCounterPositions(std::string file_name, int counter_number);
 
-    void AccumulateStats(const std::vector<RecoHit> &hits, const std::vector<AuxDet> &aux_dets);
+    void Run();
 
+
+
+    void Test();
   private:
 
-    std::map<Int_t, std::pair<TVector3,TVector3> > fCountersToLines;
-    std::vector<AuxDet> ReconstructEWTrigger(const std::vector<AuxDet> &aux_dets);
-    Double_t GetT0FromCounters(const std::vector<AuxDet> &aux_dets);
+    void LoadLine(double &m, double &c);
+    void AnalyzeCounter();
 
-    UInt_t NHitsOnWire(UInt_t wire_id, const std::vector<RecoHit> &reco_hits);
+    bool SegmentIntersectRectangle(double a_rectangleMinX,
+                                     double a_rectangleMinY,
+                                     double a_rectangleMaxX,
+                                     double a_rectangleMaxY,
+                                     double a_p1x,
+                                     double a_p1y,
+                                     double a_p2x,
+                                     double a_p2y);
 
-    Bool_t HitWithinCounterShadow(const RecoHit &hit, const std::vector<AuxDet> &aux_dets);
+    std::vector<TVector2> GetCounterBoundingBox(double z_center, double x_center);
+    std::ifstream fInputStream;
+    int fCounterNumber;
 
-    TApplication *fApp;
+    std::map<Int_t,std::pair<TVector3,std::pair<double,double> > > fCounterPositionsAndDimensions;
+    std::map<int,double> fEWCounterPosCorrection;
 
-    std::map<Int_t,std::pair<TVector3,double> > fCounterPositionsAndDimensions;
 };
-
