@@ -28,7 +28,7 @@ void EventLoop::RunAndGun(){
   //OutputManager output_manager("output.root");
 
   //For fitting the counter positions
-  ReconstructCounterTracks counter_track_reconstructer;
+  SelectDiffusionTracks counter_track_reconstructer;
   
   //Get the information to start the loop
   Long64_t NEvents = fChain->GetEntries();

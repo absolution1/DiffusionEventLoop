@@ -10,7 +10,7 @@
 #include "recoHitFactory.h"
 #include "auxDetFactory.h"
 #include "selector.h"
-#include "ReconstructCounterTracks.h"
+#include "SelectDiffusionTracks.h"
 #include "truthUtils.h"
 #include "outputManager.h"
 
