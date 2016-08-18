@@ -317,6 +317,7 @@ void SelectDiffusionTracks::AccumulateStats(const std::vector<RecoHit> &hits, co
   for (int i = 0; i < fNCounters; i++){
     fCounterID[i] = trigger_constituents[i].ID;
   }
+  fT0 = GetT0FromCounters(trigger_constituents);
   fNSelRecoHits = std::min((int)hits_after_cut_3.size(),kNMaxSelRecoHits);
   for (int i = 0; i < fNSelRecoHits; i++){
     fSelRecoHitStartTick[i] = hits_after_cut_3[i].StartTick;
