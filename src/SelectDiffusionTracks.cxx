@@ -557,6 +557,7 @@ void SelectDiffusionTracks::Reset(){
   }
   fT0 = kDefDouble;
 
+  fNSelRecoHits = 0;
   for (int i = 0; i < kNMaxSelRecoHits; i++){
     fSelRecoHitTrackID[i] = kDefInt;
     fSelRecoHitStartTick[i] = kDefInt;
