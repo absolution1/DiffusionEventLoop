@@ -92,6 +92,7 @@ class SelectDiffusionTracks{
     Double_t fSelRecoHitWireCenterX[kNMaxSelRecoHits];
     Double_t fSelRecoHitWireCenterY[kNMaxSelRecoHits];
     Double_t fSelRecoHitWireCenterZ[kNMaxSelRecoHits];
+    Double_t fSelRecoHitX[kNMaxSelRecoHits];
 
 
 };

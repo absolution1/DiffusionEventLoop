@@ -129,6 +129,7 @@ SelectDiffusionTracks::SelectDiffusionTracks::SelectDiffusionTracks(){
   fTree->Branch("SelRecoHitWireCenterX",fSelRecoHitWireCenterX,"SelRecoHitWireCenterX[NSelRecoHits]/D");
   fTree->Branch("SelRecoHitWireCenterY",fSelRecoHitWireCenterY,"SelRecoHitWireCenterY[NSelRecoHits]/D");
   fTree->Branch("SelRecoHitWireCenterZ",fSelRecoHitWireCenterZ,"SelRecoHitWireCenterZ[NSelRecoHits]/D");
+  fTree->Branch("SelRecoHitX",fSelRecoHitX,"SelRecoHitX[NSelRecoHits]/D");
 
 
 }
@@ -342,6 +343,7 @@ void SelectDiffusionTracks::AccumulateStats(const std::vector<RecoHit> &hits, co
     fSelRecoHitWireCenterX[i] = hits_after_cut_3[i].WireCenter.X();
     fSelRecoHitWireCenterY[i] = hits_after_cut_3[i].WireCenter.Y();
     fSelRecoHitWireCenterZ[i] = hits_after_cut_3[i].WireCenter.Z();
+    fSelRecoHitX[i] = ConvertTicksToX(hits_after_cut_3[i].PeakTime-T0,IsInShortDrift(hits_after_cut_3[i]));
 
 
   }
@@ -581,6 +583,7 @@ void SelectDiffusionTracks::Reset(){
     fSelRecoHitWireCenterX[i] = kDefDouble;
     fSelRecoHitWireCenterY[i] = kDefDouble;
     fSelRecoHitWireCenterZ[i] = kDefDouble;
+    fSelRecoHitX[i] = kDefDouble;
 
 
   }
