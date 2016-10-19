@@ -31,25 +31,21 @@ int main (int argc, char ** argv){
   std::ifstream file(input_file);
 
   //std::vector<std::vector<TString> > file_names_and_labels;
+  int file_count = 0;
+  int threshold = 10;
   if (file.is_open()){
     while (getline(file,line)){
       std::vector<TString> tmpStrings;
 
-      loop.AddFile(line);
-      /*
-      std::stringstream strstr(line);
-      std::string word;
-
-      std::vector<TString> file_name_and_label;
-      while (getline(strstr,word,',')){
-        file_name_and_label.push_back(word);
-      }
-      file_names_and_labels.push_back(file_name_and_label);
-      */
+      if (file_count%threshold==0 && file_count > 0) std::cout<<"Adding file " << file_count << std::endl;
+      if (file_count%100==0 && file_count > 0 && file_count/threshold==threshold)threshold*=10;
+      loop.RunAndGun(line);
+      file_count++;
     }
   }
+  std::cout<<"Finished adding " << file_count << " files"<<std::endl;
 
-  loop.RunAndGun();
+  //loop.RunAndGun();
 
   return 0;
 }

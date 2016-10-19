@@ -6,7 +6,12 @@ EventLoop::EventLoop::EventLoop(){
   fChain->SetBranchAddress("SubRun",&fSubRun);
   fChain->SetBranchAddress("Event",&fEvent);
 
+  fSelectDiffusionTracks = new SelectDiffusionTracks();
+  fGlobalEventNo=0;
 
+}
+EventLoop::~EventLoop(){
+  delete fSelectDiffusionTracks;
 }
 
 void EventLoop::AddFile(TString file_name){
@@ -14,7 +19,8 @@ void EventLoop::AddFile(TString file_name){
   return;
 }
 
-void EventLoop::RunAndGun(){
+void EventLoop::RunAndGun(TString file_name){
+  AddFile(file_name);
   //Initialise the factories
   MCParticleFactory truth_factory(fChain);
   RecoTrackFactory reco_factory(fChain);
@@ -27,15 +33,12 @@ void EventLoop::RunAndGun(){
   //Create the output manager
   //OutputManager output_manager("output.root");
 
-  //For fitting the counter positions
-  SelectDiffusionTracks counter_track_reconstructer;
-  
   //Get the information to start the loop
   Long64_t NEvents = fChain->GetEntries();
-  std::cout<<"Number of events to loop over: " << NEvents << std::endl;
+  //std::cout<<"Number of events to loop over: " << NEvents << std::endl;
   for (Long64_t eventno = 0; eventno < NEvents; eventno++){
     try{
-      PrintEventNumber(eventno);
+      PrintEventNumber();
       fChain->GetEntry(eventno);
       /*
       std::vector<MCParticle> mc_particles = truth_factory.GetParticleVector();
@@ -57,7 +60,7 @@ void EventLoop::RunAndGun(){
       std::vector<RecoHit> reco_hits = hit_factory.GetRecoHitVector();
       std::vector<AuxDet> aux_dets = auxdet_factory.GetAuxDetVector();
   
-      counter_track_reconstructer.AccumulateStats(reco_hits,aux_dets);
+      fSelectDiffusionTracks->AccumulateStats(reco_hits,aux_dets);
 
 
       //output_manager.FillEvTree();
@@ -70,14 +73,16 @@ void EventLoop::RunAndGun(){
     }
 
   }
+
+  fChain->Reset();
   return;
 }
 
 
 
-void EventLoop::PrintEventNumber(Long64_t eventno){
-  if (eventno<10) return;
-  Long64_t holder = eventno;
+void EventLoop::PrintEventNumber(){
+  //if (fGlobalEventNo<10) return;
+  Long64_t holder = fGlobalEventNo;
   int order = 0;
   while (holder > 0){
     holder/=10;
@@ -87,7 +92,8 @@ void EventLoop::PrintEventNumber(Long64_t eventno){
   for (int i = 0; i < std::min(order-1,4); i++){
     mag*=10;
   }
-  if (eventno % mag == 0) std::cout<<"Loop has reached event: " << eventno << std::endl;
+  if (fGlobalEventNo % mag == 0) std::cout<<"Loop has reached event: " << fGlobalEventNo << std::endl;
+  fGlobalEventNo++;
 
   return;
 }

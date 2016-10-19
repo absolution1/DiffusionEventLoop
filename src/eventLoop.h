@@ -17,8 +17,9 @@
 class EventLoop{
   public:
     EventLoop();
+    ~EventLoop();
     void AddFile(TString file_name);
-    void RunAndGun();
+    void RunAndGun(TString file_name);
 
   private:
     TChain *fChain;
@@ -27,5 +28,7 @@ class EventLoop{
     Int_t fSubRun;
     Int_t fEvent;
 
-    void PrintEventNumber(Long64_t eventno);
+    void PrintEventNumber();
+    Long64_t fGlobalEventNo;
+    SelectDiffusionTracks *fSelectDiffusionTracks;
 };
